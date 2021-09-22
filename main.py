@@ -1,20 +1,6 @@
-from flask import Flask, escape, request
-import requests
+from flask import Flask, request
 
 app = Flask(__name__)
-#
-#
-# @app.route('/user/<name>')
-# def hello_world(name):
-#     html_text = '''
-#     <html>
-#         <body>
-#             <h1>Header</h1>
-#             <p>Hello, %s</p>
-#         </body>
-#     </html>
-#     '''
-#     return html_text % escape(name)
 
 
 @app.route('/sum/', methods=['GET'])
@@ -64,4 +50,3 @@ def pow():
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5555, debug=True)
-    req = requests.get('http://127.0.0.1:5555/reauest-test/', params={'a': 5, 'b': 3})
