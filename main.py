@@ -1,52 +1,7 @@
-from flask import Flask, request
-
-app = Flask(__name__)
-
-
-@app.route('/sum/', methods=['GET'])
-def sum():
-    if request.method == 'GET':
-        a = int(request.args['a'])
-        b = int(request.args['b'])
-        return f'{a} + {b} = {a + b}'
-    return f'Был получен {request.method} запрос.'
-
-
-@app.route('/dif/', methods=['GET'])
-def dif():
-    if request.method == 'GET':
-        a = int(request.args['a'])
-        b = int(request.args['b'])
-        return f'{a} - {b} = {a - b}'
-    return f'Был получен {request.method} запрос.'
-
-
-@app.route('/mult/', methods=['GET'])
-def mult():
-    if request.method == 'GET':
-        a = int(request.args['a'])
-        b = int(request.args['b'])
-        return f'{a} * {b} = {a * b}'
-    return f'Был получен {request.method} запрос.'
-
-
-@app.route('/div/', methods=['GET'])
-def div():
-    if request.method == 'GET':
-        a = int(request.args['a'])
-        b = int(request.args['b'])
-        return f'{a} / {b} = {a / b}'
-    return f'Был получен {request.method} запрос.'
-
-
-@app.route('/pow/', methods=['GET'])
-def pow():
-    if request.method == 'GET':
-        a = int(request.args['a'])
-        b = int(request.args['b'])
-        return f'{a} ** {b} = {a ** b}'
-    return f'Был получен {request.method} запрос.'
-
+from database_requests import app
+from db_init import user_db, Folders, Users
 
 if __name__ == '__main__':
+    # user_db.create_all()
     app.run(host='127.0.0.1', port=5555, debug=True)
+    # print(user_db.session.query(Users).count())
