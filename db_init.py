@@ -23,6 +23,7 @@ class Folders(user_db.Model):
     login = user_db.Column(user_db.String(100), user_db.ForeignKey('Users.login'))
     mac = user_db.Column(user_db.String(50))
     folder_path = user_db.Column(user_db.String(200), default='')
+    folder_version = user_db.Column(user_db.String(50), default='')
     folder_id = user_db.Column(user_db.Integer, default=-1)
 
     def __repr__(self):
@@ -37,7 +38,7 @@ class Files(user_db.Model):
     folder_path = user_db.Column(user_db.String(200), user_db.ForeignKey('Folders.folder_path'))
     filename = user_db.Column(user_db.String(400), nullable=False)
     edited_at = user_db.Column(user_db.Float, nullable=False)
-    version = user_db.Column(user_db.Integer, nullable=False)
+    version = user_db.Column(user_db.String(50), default='')
 
     def __repr__(self):
         return self.filename

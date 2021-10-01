@@ -1,3 +1,4 @@
+import json
 from flask import request
 import database
 from db_init import app, user_db, Users
@@ -69,21 +70,62 @@ def change_password():
     return str(True)
 
 
-@app.route('/add_path/', methods=['GET'])
-def add_path():
+# @app.route('/add_version/', methods=['GET'])
+# def add_version():
+#     if request.method == 'GET':
+#         login = request.args['login']
+#         path = request.args['path']
+#         database.add_folder(
+#             login,
+#             path
+#         )
+#     return str(True)
+
+
+# @app.route('/add_file/', methods=['GET'])
+# def add_file():
+#     if request.method == 'GET':
+#         login = request.args['login']
+#         folder_path = request.args['folder_path']
+#         filename = request.args['filename']
+#         edit_time = request.args['edit_time']
+#         database.add_file(
+#             login,
+#             folder_path,
+#             filename,
+#             float(edit_time))
+#
+#     return str(True)
+
+@app.route('/add_version/', methods=['GET'])
+def add_version():
     if request.method == 'GET':
-        login = request.args['login']
-        path = request.args['path']
-        database.add_folder(login, path)
+        files = json.loads(request.data.decode('UTF-8'))
+        login = files['login']
+        mac = files['mac']
+        path_file = files['path_file']
+        ver = files['version']
+        database.add_folder(
+            login=login,
+            mac=mac,
+            folder_path=path_file,
+            version=ver
+        )
+        for file in files['files']:
+            database.add_file(
+                login=login,
+                mac=mac,
+                folder_path=path_file,
+                filename=file,
+                edited_at=float(files['files'][file]),
+                version=ver
+            )
     return str(True)
 
 
-@app.route('/add_file/', methods=['GET'])
-def add_file():
+@app.route('/update_folder/', methods=['GET'])
+def update_folder():
     if request.method == 'GET':
-        login = request.args['login']
-        folder_path = request.args['folder_path']
-        filename = request.args['filename']
-        edit_time = request.args['edit_time']
-        database.add_file(login, folder_path, filename, float(edit_time))
+        files = json.loads(request.data.decode('UTF-8'))
+        login = files['login']
     return str(True)

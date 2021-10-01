@@ -1,27 +1,50 @@
 import requests
 import os
+import json
+from sys import platform
+import uuid
+
+
+def get_mac():
+    mac_adr = hex(uuid.getnode()).replace('0x', '').upper()
+    mac = '-'.join(mac_adr[i:i + 2] for i in range(0, 11, 2))
+    return platform + '_' + mac
 
 
 def get_files(path_file):
-    files = []
+    fls = []
     for file in os.listdir(path_file):
         if os.path.isfile(path_file + '/' + file):
-            files.append(path_file + '/' + file)
+            fls.append(path_file + '/' + file)
         elif os.path.isdir(path_file + '/' + file):
-            files += get_files(path_file + '/' + file)
-    return files
+            fls += get_files(path_file + '/' + file)
+    return fls
 
 
-def get_metadata(files):
-    table = []
-    for file in files:
-        table.append((file, os.stat(file).st_mtime))
+def get_json(fls):
+    table = {
+        'login': '',
+        'mac': '',
+        'path_file': '',
+        'version': '',
+        'files': dict()
+    }
+    for file in fls:
+        table['files'][file] = os.stat(file).st_mtime
     return table
 
 
 if __name__ == '__main__':
     while True:
-        print('Reg - 0\nChange password - 1\nChange email - 2\nGet password - 3\nGet email - 4\nDelete user - 5\nAdd path - 6\nExit - 7')
+        print('Reg - 0\n'
+              'Change password - 1\n'
+              'Change email - 2\n'
+              'Get password - 3\n'
+              'Get email - 4\n'
+              'Delete user - 5\n'
+              'Add version - 6\n'
+              'Update version - 7\n'
+              'Exit - 8')
         command = input('>> ')
         if command == '0':
             req = requests.get(
@@ -71,31 +94,45 @@ if __name__ == '__main__':
                     'login': input('login: '),
                 }
             )
+
+        # Add version
         elif command == '6':
             login = input('login: ')
             folder_path = input('file path: ')
             if not os.path.exists(folder_path):
                 print('not found')
                 continue
-            req_folder = requests.get(
-                f'http://127.0.0.1:5555/add_path/',
-                params={
-                    'login': login,
-                    'path': folder_path,
-                }
+            data = get_json(get_files(folder_path))
+            data['login'] = login
+            data['mac'] = get_mac()
+            data['path_file'] = folder_path
+            data['version'] = input('version name: ')
+
+            req_file = requests.get(
+                f'http://127.0.0.1:5555/add_version/',
+                data=json.dumps(data)
             )
-            files = get_metadata(get_files(folder_path))
-            for pair in files:
-                req_file = requests.get(
-                    f'http://127.0.0.1:5555/add_file/',
-                    params={
-                        'login': login,
-                        'folder_path': folder_path,
-                        'filename': pair[0],
-                        'edit_time': pair[1],
-                    }
-                )
+
+        # Update version
         elif command == '7':
+            login = input('login: ')
+            folder_path = input('file path: ')
+            if not os.path.exists(folder_path):
+                print('not found')
+                continue
+            ver = input('old version name: ')
+            data = get_json(get_files(folder_path))
+            data['login'] = login
+            data['mac'] = get_mac()
+            data['path_file'] = folder_path
+            data['version'] = ver
+
+            req_file = requests.get(
+                f'http://127.0.0.1:5555/update_folder/',
+                data=json.dumps(data)
+            )
+
+        elif command == '8':
             break
         else:
             continue
