@@ -2,6 +2,16 @@ import json
 from flask import request
 import database
 from db_init import app, user_db, Users
+import jwt
+
+
+@app.route('/auth/', methods=['GET'])
+def auth():
+    if request.method == 'GET':
+        login = request.args['login']
+        password = request.args['password']
+        if database.auth(login=login, password=password):
+            pass
 
 
 @app.route('/check_email/', methods=['GET'])
@@ -37,7 +47,7 @@ def get_email():
 @app.route('/add_user/', methods=['GET'])
 def add_user():
     if request.method == 'GET':
-        database.add(
+        database.add_user(
             login=request.args['login'],
             email=request.args['email'],
             password=request.args['password']
@@ -48,7 +58,7 @@ def add_user():
 @app.route('/delete_user/', methods=['GET'])
 def delete_user():
     if request.method == 'GET':
-        database.delete(login=request.args['login'])
+        database.delete_user(login=request.args['login'])
     return str(True)
 
 
@@ -70,33 +80,6 @@ def change_password():
     return str(True)
 
 
-# @app.route('/add_version/', methods=['GET'])
-# def add_version():
-#     if request.method == 'GET':
-#         login = request.args['login']
-#         path = request.args['path']
-#         database.add_folder(
-#             login,
-#             path
-#         )
-#     return str(True)
-
-
-# @app.route('/add_file/', methods=['GET'])
-# def add_file():
-#     if request.method == 'GET':
-#         login = request.args['login']
-#         folder_path = request.args['folder_path']
-#         filename = request.args['filename']
-#         edit_time = request.args['edit_time']
-#         database.add_file(
-#             login,
-#             folder_path,
-#             filename,
-#             float(edit_time))
-#
-#     return str(True)
-
 @app.route('/add_version/', methods=['GET'])
 def add_version():
     if request.method == 'GET':
@@ -104,7 +87,7 @@ def add_version():
         login = files['login']
         mac = files['mac']
         path_file = files['path_file']
-        ver = files['version']
+        ver = files['new_version']
         database.add_folder(
             login=login,
             mac=mac,
@@ -112,7 +95,7 @@ def add_version():
             version=ver
         )
         for file in files['files']:
-            database.add_file(
+            database.add_files(
                 login=login,
                 mac=mac,
                 folder_path=path_file,
@@ -123,9 +106,46 @@ def add_version():
     return str(True)
 
 
-@app.route('/update_folder/', methods=['GET'])
-def update_folder():
+@app.route('/update_version/', methods=['GET'])
+def update_version():
     if request.method == 'GET':
         files = json.loads(request.data.decode('UTF-8'))
         login = files['login']
+        mac = files['mac']
+        path_file = files['path_file']
+        o_ver = files['old_version']
+        n_ver = files['new_version']
+        database.delete_folder(
+            login=login,
+            mac=mac,
+            folder_path=path_file,
+            version=o_ver
+        )
+        database.add_folder(
+            login=login,
+            mac=mac,
+            folder_path=path_file,
+            version=n_ver
+        )
+        for file in files['files']:
+            database.add_files(
+                login=login,
+                mac=mac,
+                folder_path=path_file,
+                filename=file,
+                edited_at=float(files['files'][file]),
+                version=n_ver
+            )
+    return str(True)
+
+
+@app.route('/delete_version/', methods=['GET'])
+def delete_version():
+    if request.method == 'GET':
+        database.delete_folder(
+            login=request.args['login'],
+            mac=request.args['mac'],
+            folder_path=request.args['folder_path'],
+            version=request.args['version']
+        )
     return str(True)

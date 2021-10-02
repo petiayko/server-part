@@ -1,14 +1,22 @@
 from sqlalchemy import and_
 from db_init import Users, user_db, Folders, Files
+from sqlalchemy import func
 
 
-def add(login, email, password):
+def auth(login, password):
+    return user_db.session.query(Users).filter(and_(
+        Users.login == login,
+        Users.password == password,
+    )).count() == 1
+
+
+def add_user(login, email, password):
     user = Users(login=login, mail=email, password=password)
     user_db.session.add(user)
     user_db.session.commit()
 
 
-def delete(login):
+def delete_user(login):
     user_db.session.query(Users).filter_by(login=login).delete()
     user_db.session.query(Folders).filter_by(login=login).delete()
     user_db.session.query(Files).filter_by(login=login).delete()
@@ -26,14 +34,11 @@ def change(login, field, new_value):
 
 def add_folder(login, mac, folder_path, version):
     count = user_db.session.query(Folders).filter_by(login=login).count()
-    # count_version = user_db.session.query(Folders).filter(and_(
-    #     Folders.login == login,
-    #     Folders.mac == mac,
-    #     Folders.folder_path == folder_path
-    # )).count()
-    count_all = user_db.session.query(Folders).count()
+    row_id = 0
+    if user_db.session.query(Folders).count() != 0:
+        row_id = user_db.session.query(Folders, func.max(Folders.id)).one()[1] + 1
     fld = Folders(
-        id=count_all,
+        id=row_id,
         login=login,
         mac=mac,
         folder_path=folder_path,
@@ -44,17 +49,12 @@ def add_folder(login, mac, folder_path, version):
     user_db.session.commit()
 
 
-def add_file(login, mac, folder_path, filename, edited_at, version):
-    # ver = user_db.session.query(Files).filter(and_(
-    #     Files.login == login,
-    #     Files.mac == mac,
-    #     Files.folder_path == folder_path,
-    #     Files.filename == filename,
-    #     Files.edited_at != edited_at
-    # )).count()
-    count_all = user_db.session.query(Files).count()
+def add_files(login, mac, folder_path, filename, edited_at, version):
+    row_id = 0
+    if user_db.session.query(Files).count() != 0:
+        row_id = user_db.session.query(Files, func.max(Files.id)).one()[1] + 1
     fls = Files(
-        id=count_all,
+        id=row_id,
         login=login,
         mac=mac,
         folder_path=folder_path,
@@ -63,4 +63,20 @@ def add_file(login, mac, folder_path, filename, edited_at, version):
         version=version
     )
     user_db.session.add(fls)
+    user_db.session.commit()
+
+
+def delete_folder(login, mac, folder_path, version):
+    user_db.session.query(Folders).filter(and_(
+        Folders.login == login,
+        Folders.mac == mac,
+        Folders.folder_path == folder_path,
+        Folders.folder_version == version
+    )).delete()
+    user_db.session.query(Files).filter(and_(
+        Files.login == login,
+        Files.mac == mac,
+        Files.folder_path == folder_path,
+        Files.version == version
+    )).delete()
     user_db.session.commit()
